@@ -1,0 +1,83 @@
+     1                                  ;Author Information:                                                                       
+     2                                  ;Name:         David Navarro                                                               
+     3                                  ;Email:        navarrod253n@csu.fullerton.edu                                                
+     4                                  ;Institution:  California State University - Fullerton                                     
+     5                                  ;Course:       CPSC 240-01 Assembly Language                                               
+     6                                  
+     7                                  global sum                             
+     8                                  
+     9                                  section .data     
+    10                                  
+    11                                  section .bss
+    12                                  
+    13                                  section .text
+    14                                  
+    15                                  sum:
+    16 00000000 55                      push rbp
+    17 00000001 4889E5                  mov  rbp,rsp
+    18 00000004 57                      push rdi                                                    ;Backup rdi
+    19 00000005 56                      push rsi                                                    ;Backup rsi
+    20 00000006 52                      push rdx                                                    ;Backup rdx
+    21 00000007 51                      push rcx                                                    ;Backup rcx
+    22 00000008 4150                    push r8                                                     ;Backup r8
+    23 0000000A 4151                    push r9                                                     ;Backup r9
+    24 0000000C 4152                    push r10                                                    ;Backup r10
+    25 0000000E 4153                    push r11                                                    ;Backup r11
+    26 00000010 4154                    push r12                                                    ;Backup r12
+    27 00000012 4155                    push r13                                                    ;Backup r13
+    28 00000014 4156                    push r14                                                    ;Backup r14
+    29 00000016 4157                    push r15                                                    ;Backup r15
+    30 00000018 53                      push rbx                                                    ;Backup rbx
+    31 00000019 9C                      pushf                                                       ;Backup rflags
+    32                                  
+    33                                  ;Registers rax, rip, and rsp are usually not backed up.
+    34 0000001A 6A00                    push qword 0
+    35                                  
+    36 0000001C 4989FF                  mov r15, rdi                            ; Copies array that was passed to r15.
+    37 0000001F 4989F6                  mov r14, rsi                            ; Copies number of elements in the array to r14.
+    38 00000022 41BD00000000            mov r13, 0 
+    39 00000028 F24D0F2AF5              cvtsi2sd xmm14, r13
+    40                                  ;movsd xmm0, xmm14                      ; Sum register to add elements of array to.
+    41 0000002D 41BC00000000            mov r12, 0                              ; Counter to to iterate through array.
+    42 00000033 4D89E5                  mov r13, r12
+    43                                  ;===============================================begin loop=================================================================================
+    44                                  begin_loop:
+    45                                  ; Compares the counter r12 to the number of elements in the array r14.
+    46 00000036 4D39F4                  cmp r12, r14                        
+    47 00000039 7D1B                    jge outofloop
+    48                                  
+    49                                  ;===============================================copy into array================================================================================
+    50                                  ;movsd xmm0, xmm14
+    51 0000003B 41BB01000000            mov r11, 1
+    52 00000041 F24D0F2AD3              cvtsi2sd xmm10, r11 ;converts 1 to float and stores it in xmm10
+    53 00000046 F2470F5E14E7            divsd xmm10, [r15 + 8 * r12]
+    54 0000004C F2450F58F2              addsd xmm14, xmm10    ;moves the sum to xmm14
+    55 00000051 49FFC4                  inc r12
+    56                                  
+    57 00000054 EBE0                    jmp begin_loop
+    58                                  
+    59                                  outofloop:
+    60                                  
+    61 00000056 58                      pop rax                        ;Reverse the push near the beginning of this asm function.
+    62 00000057 F24D0F2ACC              cvtsi2sd xmm9, r12
+    63 0000005C F2450F5ECE              divsd xmm9, xmm14
+    64 00000061 F2410F10C1              movsd xmm0, xmm9         ;Select the largest value for return to caller.
+    65                                  
+    66                                  ;===== Restore original values to integer registers ===================================================================
+    67 00000066 9D                      popf                                                        ;Restore rflags
+    68 00000067 5B                      pop rbx                                                     ;Restore rbx
+    69 00000068 415F                    pop r15                                                     ;Restore r15
+    70 0000006A 415E                    pop r14                                                     ;Restore r14
+    71 0000006C 415D                    pop r13                                                     ;Restore r13
+    72 0000006E 415C                    pop r12                                                     ;Restore r12
+    73 00000070 415B                    pop r11                                                     ;Restore r11
+    74 00000072 415A                    pop r10                                                     ;Restore r10
+    75 00000074 4159                    pop r9                                                      ;Restore r9
+    76 00000076 4158                    pop r8                                                      ;Restore r8
+    77 00000078 59                      pop rcx                                                     ;Restore rcx
+    78 00000079 5A                      pop rdx                                                     ;Restore rdx
+    79 0000007A 5E                      pop rsi                                                     ;Restore rsi
+    80 0000007B 5F                      pop rdi                                                     ;Restore rdi
+    81 0000007C 5D                      pop rbp                                                     ;Restore rbp
+    82                                  
+    83 0000007D C3                      ret

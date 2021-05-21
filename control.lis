@@ -1,0 +1,136 @@
+     1                                  ;Author Information:                                                                       
+     2                                  ;Name:         David Navarro                                                               
+     3                                  ;Email:        navarrod253n@csu.fullerton.edu                                                
+     4                                  ;Institution:  California State University - Fullerton                                     
+     5                                  ;Course:       CPSC 240-01 Assembly Language  
+     6                                  
+     7                                  global control
+     8                                  extern printf
+     9                                  extern scanf
+    10                                  extern fill
+    11                                  extern display
+    12                                  extern sum
+    13                                  array_size equ 10                ; Capacity limit for number of elements allowed in array.
+    14                                  
+    15                                  section .data
+    16                                  
+    17 00000000 5468616E6B20796F75-         floats_entered db "Thank you, you entered:",10,0
+    17 00000009 2C20796F7520656E74-
+    17 00000012 657265643A0A00     
+    18 00000019 546865206861726D6F-         total_sum db "The harmonic mean of all the values is %5.8lf",10,0
+    18 00000022 6E6963206D65616E20-
+    18 0000002B 6F6620616C6C207468-
+    18 00000034 652076616C75657320-
+    18 0000003D 69732025352E386C66-
+    18 00000046 0A00               
+    19 00000048 546865206861726D6F-         return_sum db "The harmonic mean will be returned to the driver.",10,0
+    19 00000051 6E6963206D65616E20-
+    19 0000005A 77696C6C2062652072-
+    19 00000063 657475726E65642074-
+    19 0000006C 6F2074686520647269-
+    19 00000075 7665722E0A00       
+    20                                  
+    21                                  section .bss
+    22 00000000 <res 00000050>              floatArray resq 10                ; Uninitialized array with 100 reserved qwords.
+    23                                  
+    24                                  section .text
+    25                                  
+    26                                  control:
+    27                                  
+    28 00000000 55                      push rbp
+    29 00000001 4889E5                  mov  rbp,rsp
+    30 00000004 57                      push rdi                                                    ;Backup rdi
+    31 00000005 56                      push rsi                                                    ;Backup rsi
+    32 00000006 52                      push rdx                                                    ;Backup rdx
+    33 00000007 51                      push rcx                                                    ;Backup rcx
+    34 00000008 4150                    push r8                                                     ;Backup r8
+    35 0000000A 4151                    push r9                                                     ;Backup r9
+    36 0000000C 4152                    push r10                                                    ;Backup r10
+    37 0000000E 4153                    push r11                                                    ;Backup r11
+    38 00000010 4154                    push r12                                                    ;Backup r12
+    39 00000012 4155                    push r13                                                    ;Backup r13
+    40 00000014 4156                    push r14                                                    ;Backup r14
+    41 00000016 4157                    push r15                                                    ;Backup r15
+    42 00000018 53                      push rbx                                                    ;Backup rbx
+    43 00000019 9C                      pushf                                                       ;Backup rflags
+    44                                  
+    45                                  ;Registers rax, rip, and rsp are usually not backed up.
+    46 0000001A 6A00                    push qword 0
+    47                                  ;-----------------------------INITIALIZE PARAMETERS-----------------------------------------
+    48 0000001C 41BE00000000            mov r14, 0                        ; Reserve register for number of elements in array.
+    49 00000022 41BD00000000            mov r13, 0                        ; Reserve register for Sum of integers in array
+    50                                  
+    51                                  ;====================================CALL FILL FUNCTION========================================================================
+    52                                  
+    53 00000028 48BF-                   mov rdi, floatArray
+    53 0000002A [0000000000000000] 
+    54 00000032 BE0A000000              mov rsi, array_size
+    55 00000037 B800000000              mov rax, 0                     
+    56 0000003C E8(00000000)            call fill
+    57 00000041 4989C6                  mov r14, rax
+    58                                  
+    59 00000044 6A00                    push qword 0                                                   
+    60 00000046 B800000000              mov rax, 0                     ;A zero in rax means printf uses no data from xmm registers.
+    61 0000004B 48BF-                   mov rdi, floats_entered        ;'The numers you entered are these:'
+    61 0000004D [0000000000000000] 
+    62 00000055 E8(00000000)            call printf
+    63 0000005A 58                      pop rax
+    64                                  
+    65                                  ;====================================CALL DISPLAY FUNCTION========================================================================
+    66                                  
+    67 0000005B 6A00                    push qword 0  
+    68 0000005D 48BF-                   mov rdi, floatArray            ;passes the array to display as first parameter
+    68 0000005F [0000000000000000] 
+    69 00000067 4C89F6                  mov rsi, r14                   ;passes the index to display as second parameter
+    70 0000006A B800000000              mov rax, 0
+    71 0000006F E8(00000000)            call display
+    72 00000074 58                      pop rax
+    73                                  
+    74                                  ;====================================CALL SUM FUNCTION============================================================
+    75 00000075 6A00                    push qword 0
+    76 00000077 48BF-                   mov rdi, floatArray            ;passes array
+    76 00000079 [0000000000000000] 
+    77 00000081 4C89F6                  mov rsi, r14                   ;number of elements
+    78 00000084 B800000000              mov rax, 0
+    79 00000089 E8(00000000)            call sum
+    80 0000008E F2440F10E8              movsd xmm13, xmm0              ;passes the return of the sum to xmm13
+    81 00000093 F2410F10ED              movsd xmm5, xmm13              ;moves the sum to xmm5
+    82 00000098 58                      pop rax                                               
+    83                                  ;====================================PRINT SUM========================================================================
+    84 00000099 6A00                    push qword 0
+    85 0000009B B801000000              mov rax, 1
+    86 000000A0 F2410F10ED              movsd xmm5, xmm13
+    87 000000A5 48BF-                   mov rdi, total_sum             ;'the harmonic mean of all the values is
+    87 000000A7 [1900000000000000] 
+    88 000000AF E8(00000000)            call printf
+    89 000000B4 58                      pop rax
+    90                                  
+    91 000000B5 6A00                    push qword 0
+    92 000000B7 B800000000              mov rax, 0
+    93 000000BC 48BF-                   mov rdi, return_sum         ;"The harmonic mean will be returned to the driver."
+    93 000000BE [4800000000000000] 
+    94 000000C6 E8(00000000)            call printf
+    95 000000CB 58                      pop rax
+    96                                  
+    97 000000CC 58                      pop rax                        ;Reverse the push near the beginning of this asm function.
+    98                                  
+    99 000000CD F20F10C5                movsd xmm0, xmm5             ;Select the largest value for return to caller.
+   100                                  
+   101                                  ;===== Restore original values to integer registers ===================================================================
+   102 000000D1 9D                      popf                                                        ;Restore rflags
+   103 000000D2 5B                      pop rbx                                                     ;Restore rbx
+   104 000000D3 415F                    pop r15                                                     ;Restore r15
+   105 000000D5 415E                    pop r14                                                     ;Restore r14
+   106 000000D7 415D                    pop r13                                                     ;Restore r13
+   107 000000D9 415C                    pop r12                                                     ;Restore r12
+   108 000000DB 415B                    pop r11                                                     ;Restore r11
+   109 000000DD 415A                    pop r10                                                     ;Restore r10
+   110 000000DF 4159                    pop r9                                                      ;Restore r9
+   111 000000E1 4158                    pop r8                                                      ;Restore r8
+   112 000000E3 59                      pop rcx                                                     ;Restore rcx
+   113 000000E4 5A                      pop rdx                                                     ;Restore rdx
+   114 000000E5 5E                      pop rsi                                                     ;Restore rsi
+   115 000000E6 5F                      pop rdi                                                     ;Restore rdi
+   116 000000E7 5D                      pop rbp                                                     ;Restore rbp
+   117                                  
+   118 000000E8 C3                      ret
